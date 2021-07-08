@@ -242,7 +242,7 @@ class SoupTag extends SoupElement {
 
   constructor(
     name: string,
-    builder,
+    builder: any,
     attrs: RelatedSoup = null,
     parent: RelatedSoup = null,
     previousElement: RelatedSoup = null,
@@ -256,16 +256,16 @@ class SoupTag extends SoupElement {
     this.builder = builder;
   }
 
-  _append(child) {
+  _append(child: any) {
     if (child) this.contents.push(child);
   }
 
   /*
    * Build a soup object tree
    */
-  _build(children) {
+  _build<T = []>(children: T): SoupTag | SoupComment | T {
     if (!children || children.length < 1) return this;
-    let last = this;
+    let last: SoupTag | SoupComment = this;
     for (let i = 0; i < children.length; ++i) {
       let ele = this._transform(children[i]);
       if (!ele) throw Error("Sei lá o que aconteceu");
@@ -304,8 +304,8 @@ class SoupTag extends SoupElement {
     return new SoupTag(dom.name, this.builder, dom.attribs, this);
   }
 
-  get string() {
-    const cur = this;
+  get string(): string | undefined {
+    let cur = this;
     while (cur && cur.contents && cur.contents.length == 1) {
       cur = cur.contents[0];
     }
@@ -340,7 +340,7 @@ class SoupTag extends SoupElement {
   }
 
   findPreviousSibling(name = undefined, attrs = undefined, string = undefined) {
-    var results = this.findPreviousSiblings(name, attrs, string);
+    const results = this.findPreviousSiblings(name, attrs, string);
     if (results.length > 0) {
       return results[0];
     }
@@ -352,12 +352,12 @@ class SoupTag extends SoupElement {
     attrs = undefined,
     string = undefined
   ) {
-    var results = [];
-    var cur = this.previousSibling;
-    var strainer = new SoupStrainer(name, attrs, string);
+    const results = [];
+    const cur = this.previousSibling;
+    const strainer = new SoupStrainer(name, attrs, string);
     while (cur) {
       if (cur instanceof SoupTag) {
-        var tag = strainer.match(cur);
+        const tag = strainer.match(cur);
         if (tag) {
           results.push(tag);
         }
@@ -499,15 +499,15 @@ class SoupTag extends SoupElement {
    * Append item in contents
    */
   append(item) {
-    var pre = this;
-    var next = this.nextElement;
-    var appendFirst = item;
-    var appendLast = item;
-    var itemDescendants = item.descendants;
+    let pre = this;
+    let next = this.nextElement;
+    const appendFirst = item;
+    let appendLast = item;
+    const itemDescendants = item.descendants;
     if (itemDescendants && itemDescendants.length > 0) {
       appendLast = itemDescendants[itemDescendants.length - 1];
     }
-    var descendants = this.descendants;
+    const descendants = this.descendants;
     if (descendants && descendants.length > 0) {
       pre = descendants[descendants.length - 1];
       next = pre.nextElement;
@@ -592,7 +592,7 @@ class SoupStrainer {
     this.string = string;
   }
 
-  match(tag: SoupStrainer) {
+  match(tag: SoupTag) {
     // match string
     if (this.name == undefined && this.attrs == undefined) {
       if (this.string) {
@@ -612,7 +612,7 @@ class SoupStrainer {
       if (!this._isEmptyObject(this.attrs)) {
         const props = Object.getOwnPropertyNames(this.attrs);
         let found = false;
-        for (var i = 0; i < props.length; ++i) {
+        for (let i = 0; i < props.length; ++i) {
           if (
             props[i] in tag.attrs &&
             this._matchAttrs(
