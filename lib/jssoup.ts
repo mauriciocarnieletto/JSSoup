@@ -139,8 +139,8 @@ class SoupElement {
     if (index < count) {
       lastElementOfNewElement.nextElement = this.contents[index];
     } else {
-      var parent = this;
-      var parentNextSibling = null;
+      let parent: RelatedSoup = this;
+      let parentNextSibling: RelatedSoup = null;
       while (!parentNextSibling && parent) {
         parentNextSibling = parent.nextSibling;
         parent = parent.parent;
@@ -161,8 +161,8 @@ class SoupElement {
     this.contents.splice(index, 0, newElement);
   }
 
-  replaceWith(newElement) {
-    if (this.parent == null) {
+  replaceWith(newElement: SoupElement) {
+    if (this.parent === null) {
       throw "Cannot replace element without parent!";
     }
 
@@ -187,7 +187,13 @@ class SoupElement {
 }
 
 class SoupComment extends SoupElement {
-  constructor(text, parent = null, previousElement = null, nextElement = null) {
+  _text: string;
+  constructor(
+    text: string,
+    parent: RelatedSoup = null,
+    previousElement: RelatedSoup = null,
+    nextElement: RelatedSoup = null
+  ) {
     super(parent, previousElement, nextElement);
     this._text = text;
   }
@@ -232,15 +238,15 @@ class SoupTag extends SoupElement {
   attrs: {};
   hidden: boolean;
   builder: any;
-  contents: [];
+  contents: any[];
 
   constructor(
     name: string,
     builder,
-    attrs = null,
-    parent = null,
-    previousElement = null,
-    nextElement = null
+    attrs: RelatedSoup = null,
+    parent: RelatedSoup = null,
+    previousElement: RelatedSoup = null,
+    nextElement: RelatedSoup = null
   ) {
     super(parent, previousElement, nextElement);
     this.name = name;
@@ -262,6 +268,7 @@ class SoupTag extends SoupElement {
     let last = this;
     for (let i = 0; i < children.length; ++i) {
       let ele = this._transform(children[i]);
+      if (!ele) throw Error("Sei lá o que aconteceu");
       last.nextElement = ele;
       ele.previousElement = last;
       if (ele instanceof SoupTag) {
@@ -287,7 +294,7 @@ class SoupTag extends SoupElement {
     if (!dom) return null;
     if (dom.type === "text" && dom.data) {
       return new SoupString(dom.data, this);
-    } else if (dom.type === "comment") {
+    } else if (dom.type === "comment" && dom.data) {
       return new SoupComment(dom.data, this);
     } else if (dom.type === "directive") {
       if (dom.name === "!DOCTYPE" && dom.data) {
@@ -298,7 +305,7 @@ class SoupTag extends SoupElement {
   }
 
   get string() {
-    var cur = this;
+    const cur = this;
     while (cur && cur.contents && cur.contents.length == 1) {
       cur = cur.contents[0];
     }
@@ -315,7 +322,7 @@ class SoupTag extends SoupElement {
   /*
    * like find_all in BeautifulSoup
    */
-  findAll(name = undefined, attrs = undefined, string = undefined) {
+  findAll(name?: string, attrs = undefined, string?: string) {
     var results = [];
     var strainer = new SoupStrainer(name, attrs, string);
 
@@ -559,14 +566,14 @@ export default class JSSoup extends SoupTag {
 }
 
 class SoupStrainer {
-  name: string;
-  attrs: string | string[] | { class: string[] };
-  string: string;
+  name?: string;
+  attrs?: string | string[] | { class: string[] };
+  string?: string;
 
   constructor(
-    name: string,
-    attrs: string | string[] | { class: string[] },
-    string: string
+    name?: string,
+    attrs?: string | string[] | { class: string[] },
+    string?: string
   ) {
     if (typeof attrs == "string") {
       attrs = { class: [attrs] };
@@ -576,7 +583,7 @@ class SoupStrainer {
       attrs.class = [attrs.class];
     }
     if (attrs && attrs.class) {
-      for (var i = 0; i < attrs.class.length; ++i) {
+      for (let i = 0; i < attrs.class.length; ++i) {
         attrs.class[i] = attrs.class[i].trim();
       }
     }
@@ -601,7 +608,7 @@ class SoupStrainer {
     match = this._matchName(tag.string, this.string);
     if (!match) return null;
     // match attributes
-    if (typeof this.attrs == "object") {
+    if (typeof this.attrs === "object") {
       if (!this._isEmptyObject(this.attrs)) {
         const props = Object.getOwnPropertyNames(this.attrs);
         let found = false;
@@ -624,8 +631,8 @@ class SoupStrainer {
     return tag;
   }
 
-  _matchName(tagItem: string, name: string) {
-    if (name == undefined || name == null) return true;
+  _matchName(tagItem?: string, name?: string) {
+    if (name === undefined || name === null) return true;
     // if name is an array, then tag match any item in this array is a match.
     if (Array.isArray(name)) {
       for (var i = 0; i < name.length; ++i) {
